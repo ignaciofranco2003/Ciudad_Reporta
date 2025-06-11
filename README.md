@@ -1,7 +1,7 @@
 # Ciudad_Reporta
 
 ### Configuracion de la BDD
-Cambiar los valores necesarios para poder conectarse con la BDD
+Cambiar los valores necesarios para poder conectarse con la BDD (al inicio del archivo "Ciudad_Reporta.py")
 ```
 conn = mysql.connector.connect(
     host='localhost',
