@@ -1,11 +1,18 @@
+import os
 from flask import Flask, request, jsonify
 from flask import send_from_directory
 import mysql.connector
 from flask_cors import CORS
 from datetime import datetime
+from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
 CORS(app)  # habilita CORS para todos los orígenes y rutas
+
+# Ruta absoluta al directorio de imágenes
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'imagenes')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 conn = mysql.connector.connect(
     host='localhost',
@@ -107,7 +114,6 @@ def login_o_registrar():
         print(f"[ERROR] {e}")
         return jsonify({'error': 'Error al iniciar sesion o registrar usuario'}), 500
 
-
 @app.route('/admin/login', methods=['POST'])
 def login_admin():
     data = request.get_json()
@@ -118,8 +124,6 @@ def login_admin():
         # Verificar si es un usuario administrador
         cursor.execute("SELECT id_usuario, rol FROM usuarios WHERE email = %s AND rol = %s", (email,"administrador"))
         usuario = cursor.fetchone()
-
-        print(usuario)
 
         if not usuario:
             return jsonify({'error': 'Credenciales invalidas'}), 404
@@ -418,7 +422,6 @@ def finalizar_reporte(id_reporte):
         return jsonify({'error': 'Error al finalizar el reporte'}), 500
 
 #-------------------------------------------- Obtener categorias ----------------------------------------------
-
 @app.route('/categorias', methods=['GET'])
 def obtener_categorias():
     try:
@@ -437,7 +440,6 @@ def obtener_categorias():
     except Exception as e:
         return jsonify({'error': 'Error al obtener categorías', 'detalles': str(e)}), 500
 
-
 #--------------------------------------Procesamiento de imagenes -----------------------------------------
 @app.route('/imagenes/<nombre>')
 def servir_imagen(nombre):
@@ -448,6 +450,30 @@ def servir_imagen(nombre):
 @app.route('/')
 def panel_admin():
     return app.send_static_file('index.html')
+
+@app.route('/prueba')
+def prueba():
+    return app.send_static_file('prueba.html')
+
+@app.route('/subir-imagen', methods=['POST'])
+def subir_imagen():
+    if 'imagen' not in request.files:
+        return jsonify({'error': 'No se recibió ninguna imagen'}), 400
+
+    imagen = request.files['imagen']
+    if imagen.filename == '':
+        return jsonify({'error': 'Nombre de archivo vacío'}), 400
+
+    nombre_seguro = secure_filename(imagen.filename)
+    # Evita duplicados agregando timestamp
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    extension = os.path.splitext(nombre_seguro)[1]
+    nuevo_nombre = f"img_{timestamp}{extension}"
+    ruta_completa = os.path.join(UPLOAD_FOLDER, nuevo_nombre)
+    imagen.save(ruta_completa)
+
+    url = f"/static/imagenes/{nuevo_nombre}"
+    return jsonify({'url': url}), 200
 
 if __name__ == '__main__':
     init_db()
