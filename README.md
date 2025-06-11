@@ -1,5 +1,16 @@
 # Ciudad_Reporta
 
+### Configuracion de la BDD
+Cambiar los valores necesarios para poder conectarse con la BDD
+```
+conn = mysql.connector.connect(
+    host='localhost',
+    user='root',
+    password='1234'
+)
+```
+
+
 # scripts-python
 
 ### Para crear un entorno virtual
@@ -13,4 +24,8 @@ py -m venv .venv
 ### Para instalar las librerias requeridas para este Script
 ```python
 pip install -r req.txt
+```
+### Para ejecutar el script
+```python
+py Ciudad_Reporta.py
 ```
