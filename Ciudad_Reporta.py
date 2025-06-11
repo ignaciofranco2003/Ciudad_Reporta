@@ -417,6 +417,27 @@ def finalizar_reporte(id_reporte):
         print(f"[ERROR] {e}")
         return jsonify({'error': 'Error al finalizar el reporte'}), 500
 
+#-------------------------------------------- Obtener categorias ----------------------------------------------
+
+@app.route('/categorias', methods=['GET'])
+def obtener_categorias():
+    try:
+        cursor.execute("SELECT id_categoria_problematica, nombre_categoria FROM categorias_problematicas")
+        resultados = cursor.fetchall()
+
+        if not resultados:
+            return jsonify({'mensaje': 'No hay categorías registradas'}), 404
+
+        categorias = [
+            {'id': fila[0], 'nombre': fila[1]}
+            for fila in resultados
+        ]
+        return jsonify(categorias), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Error al obtener categorías', 'detalles': str(e)}), 500
+
+
 #--------------------------------------Procesamiento de imagenes -----------------------------------------
 @app.route('/imagenes/<nombre>')
 def servir_imagen(nombre):
