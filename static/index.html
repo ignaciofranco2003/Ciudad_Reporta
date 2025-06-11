@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Administración</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f2f2f2;
+      padding: 0;
+      margin: 0;
+    }
+
+    header {
+      background: #007BFF;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      flex: 1;
+    }
+
+
+    header button {
+      background: #dc3545;
+      border: none;
+      padding: 8px 16px;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      align-self: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    header button:hover {
+      background: #a71d2a;
+    }
+
+    #login, #panel {
+      max-width: 500px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .reporte {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      background: #fafafa;
+    }
+
+    .oculto {
+      display: none;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 10px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      margin: 0 5px;
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    .tab-btn.activa {
+      background: #007BFF;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<header class="oculto" id="barra">
+  <h1>CIUDAD REPORTA</h1>
+  <button onclick="logout()">Cerrar sesión</button>
+</header>
+
+<div id="login">
+  <h2>Login Administrador</h2>
+  <label>Email:</label>
+  <input type="email" id="email" required>
+  <label>Contraseña:</label>
+  <input type="password" id="password" required>
+  <button onclick="login()">Ingresar</button>
+</div>
+
+<div id="panel" class="oculto">
+  <h2 id="tituloEstado">Reportes Activos</h2>
+
+  <div class="tabs">
+    <button class="tab-btn activa" onclick="cambiarVista('activo', this)">Activos</button>
+    <button class="tab-btn" onclick="cambiarVista('pendiente', this)">Pendientes</button>
+    <button class="tab-btn" onclick="cambiarVista('solucionado', this)">Solucionados</button>
+  </div>
+
+  <div id="reportes"></div>
+</div>
+
+<script>
+  if (localStorage.getItem("id_usuario")) {
+    mostrarPanel();
+  }
+
+  async function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      const res = await fetch("http://localhost:5000/admin/login", {
+        method: "POST", // corregido
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) throw new Error("Login incorrecto");
+
+      const data = await res.json();
+      const id_usuario = data.id;
+
+      localStorage.setItem("id_usuario", id_usuario);
+
+      mostrarPanel();
+
+    } catch (error) {
+      alert("Error en login: " + error.message);
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("id_usuario");
+    document.getElementById("panel").classList.add("oculto");
+    document.getElementById("barra").classList.add("oculto");
+    document.getElementById("login").classList.remove("oculto");
+  }
+
+  function mostrarPanel() {
+    document.getElementById("login").classList.add("oculto");
+    document.getElementById("panel").classList.remove("oculto");
+    document.getElementById("barra").classList.remove("oculto");
+    cargarReportes("activo");
+  }
+
+  function cambiarVista(estado, boton) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("activa"));
+    boton.classList.add("activa");
+    cargarReportes(estado);
+  }
+
+  async function cargarReportes(estado) {
+    try {
+      const res = await fetch(`http://localhost:5000/reportes/${estado}`);
+      const data = await res.json();
+
+      const reportes = Array.isArray(data) ? data : data.reportes;
+
+      const contenedor = document.getElementById("reportes");
+      contenedor.innerHTML = "";
+
+      document.getElementById("tituloEstado").textContent = `Reportes ${estado.charAt(0).toUpperCase() + estado.slice(1)}`;
+
+      if (!Array.isArray(reportes) || reportes.length === 0) {
+        contenedor.innerHTML = "<p>No hay reportes.</p>";
+        return;
+      }
+
+      reportes.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "reporte";
+        div.innerHTML = `
+          <p><strong>ID Reporte:</strong> ${r.id_reporte}</p>
+          <p><strong>Descripción:</strong> ${r.descripcion}</p>
+          <p><strong>Categoría:</strong> ${r.nombre_categoria}</p>
+          <p><strong>Ubicación:</strong> ${r.latitud}, ${r.longitud}</p>
+          <p><strong>ID Usuario:</strong> ${r.fk_id_usuario}</p>
+        `;
+
+        if (estado === "activo") {
+          div.innerHTML += `<button onclick="marcarRevisado(${r.id_reporte})">Marcar como revisado</button>`;
+        }
+
+        contenedor.appendChild(div);
+      });
+    } catch (error) {
+      alert("Error al cargar reportes.");
+    }
+  }
+
+  async function marcarRevisado(id) {
+    if (!confirm("¿Estás seguro de marcar este reporte como revisado?")) return;
+
+    try {
+      const id_usuario = localStorage.getItem("id_usuario");
+
+      const res = await fetch(`http://localhost:5000/reportes/${id}/revisar`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ id_usuario })
+      });
+
+      if (res.ok) {
+        alert("Reporte marcado como revisado.");
+        cargarReportes("activo");
+      } else {
+        alert("No se pudo actualizar el estado.");
+      }
+    } catch (error) {
+      alert("Error en la operación.");
+    }
+  }
+</script>
+
+</body>
+</html>
