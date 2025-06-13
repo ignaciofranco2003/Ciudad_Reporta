@@ -1,158 +1,273 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Panel de Administración</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f2f2f2;
-      padding: 0;
+    * {
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
     }
 
-    header {
-      background: #007BFF;
-      color: white;
-      padding: 10px 20px;
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #eef2ff, #f9faff);
+      color: #333;
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+    }
+
+    .navbar {
+      background: white;
+      color: #2b4eff;
+      display: flex;
+      width: 100%;
       justify-content: space-between;
       align-items: center;
+      padding: 0 32px;
+      min-height: 60px;
+      border-bottom: 1px solid #e1e5f2;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      position: sticky;
+      top: 0;
+      z-index: 999;
     }
 
-    header h1 {
-      margin: 0;
-      font-size: 20px;
-      flex: 1;
-    }
-
-
-    header button {
-      background: #dc3545;
-      border: none;
-      padding: 8px 16px;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      align-self: center;
+    .navbar-left {
       display: flex;
-      justify-content: center;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .navbar-logo {
+      font-size: 30px;
+      line-height: 1;
+      display: flex;
       align-items: center;
     }
 
-    header button:hover {
-      background: #a71d2a;
+    .navbar-title {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 25px;
+    }
+
+    .logout-btn {
+      background-color: #f2f4ff;
+      color: #2b4eff;
+      border: 1px solid #c6d3ff;
+      padding: 8px 16px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .logout-btn:hover {
+      background-color: #2b4eff;
+      color: white;
+      border-color: #2b4eff;
     }
 
     #login, #panel {
-      max-width: 500px;
-      margin: 40px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+      margin-top: 60px;
+      padding: 32px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     h2 {
       text-align: center;
+      color: #2b4eff;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
     }
 
     label {
       display: block;
-      margin-top: 10px;
+      margin: 14px 0 6px;
+      font-weight: 500;
+      color: #444;
     }
 
-    input[type="email"], input[type="password"] {
+    input[type="email"],
+    input[type="password"] {
       width: 100%;
-      padding: 8px;
-      margin-top: 5px;
+      padding: 14px 16px;
+      border: 1px solid #d0d5e2;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    input:focus {
+      border-color: #2b4eff;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(43, 78, 255, 0.15);
     }
 
     button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background: #007BFF;
+      width: 100%;
+      padding: 14px;
+      background: #2b4eff;
       color: white;
       border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      margin-top: 24px;
       cursor: pointer;
-      border-radius: 5px;
+      transition: background 0.3s;
     }
 
     button:hover {
-      background: #0056b3;
+      background: #1c34b8;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #edf0ff;
+      color: #2b4eff;
+      transition: all 0.25s ease;
+    }
+
+    .tab-btn.activa {
+      background: #2b4eff;
+      color: #fff;
     }
 
     .reporte {
-      border: 1px solid #ccc;
+      background: #f4f6ff;
+      border: 1px solid #dbe1ff;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .reporte:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .reporte p {
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    .reporte button {
+      margin-top: 12px;
+      font-size: 14px;
       padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      background: #fafafa;
+      background: #2b4eff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    .reporte button:hover {
+      background: #1d33c6;
     }
 
     .oculto {
       display: none;
     }
 
-    .tabs {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 10px;
-    }
+    @media (max-width: 480px) {
+      #login, #panel {
+        margin: 20px 16px;
+        padding: 24px;
+      }
 
-    .tab-btn {
-      flex: 1;
-      margin: 0 5px;
-      background: #e0e0e0;
-      color: #333;
-    }
-
-    .tab-btn.activa {
-      background: #007BFF;
-      color: white;
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
     }
   </style>
 </head>
 <body>
+  <header class="navbar oculto" id="barra">
+    <div class="navbar-left">
+      <span class="navbar-logo">📍</span>
+      <span class="navbar-title">Ciudad Reporta</span>
+    </div>
+    <div class="navbar-right">
+      <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
 
-<header class="oculto" id="barra">
-  <h1>CIUDAD REPORTA</h1>
-  <button onclick="logout()">Cerrar sesión</button>
-</header>
-
-<div id="login">
-  <h2>Login Administrador</h2>
-  <label>Email:</label>
-  <input type="email" id="email" required>
-  <label>Contraseña:</label>
-  <input type="password" id="password" required>
-  <button onclick="login()">Ingresar</button>
-</div>
-
-<div id="panel" class="oculto">
-  <h2 id="tituloEstado">Reportes Activos</h2>
-
-  <div class="tabs">
-    <button class="tab-btn activa" onclick="cambiarVista('activo', this)">Activos</button>
-    <button class="tab-btn" onclick="cambiarVista('pendiente', this)">Pendientes</button>
-    <button class="tab-btn" onclick="cambiarVista('solucionado', this)">Solucionados</button>
+  <div id="login">
+    <h2>Acceso Administrador</h2>
+    <label for="email">Email</label>
+    <input type="email" id="email" required>
+    <label for="password">Contraseña</label>
+    <input type="password" id="password" required>
+    <button onclick="login()">Ingresar</button>
   </div>
 
-  <div id="reportes"></div>
-</div>
+  <div id="panel" class="oculto">
+    <h2 id="tituloEstado">Reportes Activos</h2>
+
+    <div class="tabs">
+      <button class="tab-btn activa" onclick="cambiarVista('activo', this)">Activos</button>
+      <button class="tab-btn" onclick="cambiarVista('pendiente', this)">Pendientes</button>
+      <button class="tab-btn" onclick="cambiarVista('solucionado', this)">Solucionados</button>
+    </div>
+
+    <div id="reportes"></div>
+  </div>
 
 <script>
-  if (localStorage.getItem("id_usuario")) {
-    mostrarPanel();
-  }
+  if (localStorage.getItem("id_usuario")) mostrarPanel();
 
   async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-
     try {
       const res = await fetch("http://localhost:5000/admin/login", {
-        method: "POST", // corregido
+        method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ email, password })
       });
@@ -160,12 +275,8 @@
       if (!res.ok) throw new Error("Login incorrecto");
 
       const data = await res.json();
-      const id_usuario = data.id;
-
-      localStorage.setItem("id_usuario", id_usuario);
-
+      localStorage.setItem("id_usuario", data.id);
       mostrarPanel();
-
     } catch (error) {
       alert("Error en login: " + error.message);
     }
@@ -195,15 +306,13 @@
     try {
       const res = await fetch(`http://localhost:5000/reportes/${estado}`);
       const data = await res.json();
-
       const reportes = Array.isArray(data) ? data : data.reportes;
-
       const contenedor = document.getElementById("reportes");
       contenedor.innerHTML = "";
 
       document.getElementById("tituloEstado").textContent = `Reportes ${estado.charAt(0).toUpperCase() + estado.slice(1)}`;
 
-      if (!Array.isArray(reportes) || reportes.length === 0) {
+      if (!reportes.length) {
         contenedor.innerHTML = "<p>No hay reportes.</p>";
         return;
       }
@@ -235,7 +344,6 @@
 
     try {
       const id_usuario = localStorage.getItem("id_usuario");
-
       const res = await fetch(`http://localhost:5000/reportes/${id}/revisar`, {
         method: "PUT",
         headers: {"Content-Type": "application/json"},
@@ -250,6 +358,169 @@
       }
     } catch (error) {
       alert("Error en la operación.");
+    }
+  }
+</script>
+<script>
+  if (localStorage.getItem("id_usuario")) mostrarPanel();
+
+  async function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      const res = await fetch("http://localhost:5000/admin/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) throw new Error("Credenciales incorrectas");
+
+      const data = await res.json();
+      localStorage.setItem("id_usuario", data.id);
+      mostrarPanel();
+
+      // Mensaje de éxito
+      Swal.fire({
+        icon: 'success',
+        title: '¡Bienvenido!',
+        text: 'Has iniciado sesión correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Inicio de sesión fallido',
+        text: error.message || 'Verificá tu correo y contraseña.'
+      });
+    }
+  }
+
+  function logout() {
+    Swal.fire({
+      title: '¿Cerrar sesión?',
+      text: 'Vas a salir del panel de administrador.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#2b4eff',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, salir',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("id_usuario");
+        document.getElementById("panel").classList.add("oculto");
+        document.getElementById("barra").classList.add("oculto");
+        document.getElementById("login").classList.remove("oculto");
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Sesión cerrada',
+          text: 'Has salido correctamente.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    });
+  }
+
+  function mostrarPanel() {
+    document.getElementById("login").classList.add("oculto");
+    document.getElementById("panel").classList.remove("oculto");
+    document.getElementById("barra").classList.remove("oculto");
+    cargarReportes("activo");
+  }
+
+  function cambiarVista(estado, boton) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("activa"));
+    boton.classList.add("activa");
+    cargarReportes(estado);
+  }
+
+  async function cargarReportes(estado) {
+    try {
+      const res = await fetch(`http://localhost:5000/reportes/${estado}`);
+      const data = await res.json();
+      const reportes = Array.isArray(data) ? data : data.reportes;
+
+      const contenedor = document.getElementById("reportes");
+      contenedor.innerHTML = "";
+      document.getElementById("tituloEstado").textContent = `Reportes ${estado.charAt(0).toUpperCase() + estado.slice(1)}`;
+
+      if (!reportes.length) {
+        contenedor.innerHTML = "<p>No hay reportes.</p>";
+        return;
+      }
+
+      reportes.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "reporte";
+        div.innerHTML = `
+          <p><strong>ID Reporte:</strong> ${r.id_reporte}</p>
+          <p><strong>Descripción:</strong> ${r.descripcion}</p>
+          <p><strong>Categoría:</strong> ${r.nombre_categoria}</p>
+          <p><strong>Ubicación:</strong> ${r.latitud}, ${r.longitud}</p>
+          <p><strong>ID Usuario:</strong> ${r.fk_id_usuario}</p>
+        `;
+
+        if (estado === "activo") {
+          div.innerHTML += `<button onclick="marcarRevisado(${r.id_reporte})">Marcar como revisado</button>`;
+        }
+
+        contenedor.appendChild(div);
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al cargar reportes',
+        text: 'Ocurrió un problema inesperado.'
+      });
+    }
+  }
+
+  async function marcarRevisado(id) {
+    const confirmacion = await Swal.fire({
+      title: '¿Marcar como revisado?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#2b4eff',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, marcar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+      const id_usuario = localStorage.getItem("id_usuario");
+      const res = await fetch(`http://localhost:5000/reportes/${id}/revisar`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ id_usuario })
+      });
+
+      if (res.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Reporte actualizado',
+          text: 'Fue marcado como revisado correctamente.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        cargarReportes("activo");
+      } else {
+        throw new Error();
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al marcar',
+        text: 'No se pudo actualizar el estado del reporte.'
+      });
     }
   }
 </script>
