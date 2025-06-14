@@ -262,111 +262,16 @@
     <div id="reportes"></div>
   </div>
 
+
+</body>
+</html>
+
+
 <script>
+  // Si ya hay un usuario logueado, mostrar el panel
   if (localStorage.getItem("id_usuario")) mostrarPanel();
 
-  async function login() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    try {
-      const res = await fetch("http://localhost:5000/admin/login", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ email, password })
-      });
-
-      if (!res.ok) throw new Error("Login incorrecto");
-
-      const data = await res.json();
-      localStorage.setItem("id_usuario", data.id);
-      mostrarPanel();
-    } catch (error) {
-      alert("Error en login: " + error.message);
-    }
-  }
-
-  function logout() {
-    localStorage.removeItem("id_usuario");
-    document.getElementById("panel").classList.add("oculto");
-    document.getElementById("barra").classList.add("oculto");
-    document.getElementById("login").classList.remove("oculto");
-  }
-
-  function mostrarPanel() {
-    document.getElementById("login").classList.add("oculto");
-    document.getElementById("panel").classList.remove("oculto");
-    document.getElementById("barra").classList.remove("oculto");
-    cargarReportes("activo");
-  }
-
-  function cambiarVista(estado, boton) {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("activa"));
-    boton.classList.add("activa");
-    cargarReportes(estado);
-  }
-
-  async function cargarReportes(estado) {
-    try {
-      const res = await fetch(`http://localhost:5000/reportes/${estado}`);
-      const data = await res.json();
-      const reportes = Array.isArray(data) ? data : data.reportes;
-      const contenedor = document.getElementById("reportes");
-      contenedor.innerHTML = "";
-
-      document.getElementById("tituloEstado").textContent = `Reportes ${estado.charAt(0).toUpperCase() + estado.slice(1)}`;
-
-      if (!reportes.length) {
-        contenedor.innerHTML = "<p>No hay reportes.</p>";
-        return;
-      }
-
-      reportes.forEach(r => {
-        const div = document.createElement("div");
-        div.className = "reporte";
-        div.innerHTML = `
-          <p><strong>ID Reporte:</strong> ${r.id_reporte}</p>
-          <p><strong>Descripción:</strong> ${r.descripcion}</p>
-          <p><strong>Categoría:</strong> ${r.nombre_categoria}</p>
-          <p><strong>Ubicación:</strong> ${r.latitud}, ${r.longitud}</p>
-          <p><strong>ID Usuario:</strong> ${r.fk_id_usuario}</p>
-        `;
-
-        if (estado === "activo") {
-          div.innerHTML += `<button onclick="marcarRevisado(${r.id_reporte})">Marcar como revisado</button>`;
-        }
-
-        contenedor.appendChild(div);
-      });
-    } catch (error) {
-      alert("Error al cargar reportes.");
-    }
-  }
-
-  async function marcarRevisado(id) {
-    if (!confirm("¿Estás seguro de marcar este reporte como revisado?")) return;
-
-    try {
-      const id_usuario = localStorage.getItem("id_usuario");
-      const res = await fetch(`http://localhost:5000/reportes/${id}/revisar`, {
-        method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ id_usuario })
-      });
-
-      if (res.ok) {
-        alert("Reporte marcado como revisado.");
-        cargarReportes("activo");
-      } else {
-        alert("No se pudo actualizar el estado.");
-      }
-    } catch (error) {
-      alert("Error en la operación.");
-    }
-  }
-</script>
-<script>
-  if (localStorage.getItem("id_usuario")) mostrarPanel();
-
+  // Función para iniciar sesión
   async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
@@ -384,7 +289,6 @@
       localStorage.setItem("id_usuario", data.id);
       mostrarPanel();
 
-      // Mensaje de éxito
       Swal.fire({
         icon: 'success',
         title: '¡Bienvenido!',
@@ -402,6 +306,7 @@
     }
   }
 
+  // Función para cerrar sesión
   function logout() {
     Swal.fire({
       title: '¿Cerrar sesión?',
@@ -430,6 +335,7 @@
     });
   }
 
+  // Mostrar el panel de administración
   function mostrarPanel() {
     document.getElementById("login").classList.add("oculto");
     document.getElementById("panel").classList.remove("oculto");
@@ -437,12 +343,14 @@
     cargarReportes("activo");
   }
 
+  // Cambiar entre reportes activos, pendientes, etc.
   function cambiarVista(estado, boton) {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("activa"));
     boton.classList.add("activa");
     cargarReportes(estado);
   }
 
+  // Cargar reportes por estado
   async function cargarReportes(estado) {
     try {
       const res = await fetch(`http://localhost:5000/reportes/${estado}`);
@@ -461,7 +369,9 @@
       reportes.forEach(r => {
         const div = document.createElement("div");
         div.className = "reporte";
-        div.innerHTML = `
+
+        // Contenido del reporte
+        let html = `
           <p><strong>ID Reporte:</strong> ${r.id_reporte}</p>
           <p><strong>Descripción:</strong> ${r.descripcion}</p>
           <p><strong>Categoría:</strong> ${r.nombre_categoria}</p>
@@ -469,10 +379,15 @@
           <p><strong>ID Usuario:</strong> ${r.fk_id_usuario}</p>
         `;
 
+        // Botón "Marcar como revisado"
         if (estado === "activo") {
-          div.innerHTML += `<button onclick="marcarRevisado(${r.id_reporte})">Marcar como revisado</button>`;
+          html += `<button onclick="marcarRevisado(${r.id_reporte})">Marcar como revisado</button>`;
         }
 
+        // Botón "Ver en el mapa"
+        html += `<button style="background-color: gold; color: black;" onclick="verEnMapa(${r.latitud}, ${r.longitud})">Ver en el mapa</button>`;
+
+        div.innerHTML = html;
         contenedor.appendChild(div);
       });
     } catch (error) {
@@ -484,6 +399,13 @@
     }
   }
 
+  // Abrir Google Maps con coordenadas
+  function verEnMapa(lat, lng) {
+    const url = `https://www.google.com/maps?q=${lat},${lng}`;
+    window.open(url, "_blank");
+  }
+
+  // Marcar un reporte como revisado
   async function marcarRevisado(id) {
     const confirmacion = await Swal.fire({
       title: '¿Marcar como revisado?',
@@ -527,6 +449,3 @@
     }
   }
 </script>
-
-</body>
-</html>
