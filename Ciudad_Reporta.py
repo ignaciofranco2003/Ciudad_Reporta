@@ -451,6 +451,7 @@ def finalizar_reporte(id_reporte):
         nuevo_estado = 'Solucionado' if confirmacion else 'Activo'
 
         cursor.execute("UPDATE reporte SET estado = %s WHERE id_reporte = %s", (nuevo_estado, id_reporte))
+        cursor.execute("UPDATE reporte SET solucionada = %s WHERE id_reporte = %s", (confirmacion, id_reporte))
         conn.commit()
 
         return jsonify({'mensaje': f'Reporte marcado como {nuevo_estado}'}), 200
