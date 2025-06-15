@@ -5,227 +5,6 @@
   <title>Panel de Administración</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(to right, #eef2ff, #f9faff);
-      color: #333;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: start;
-    }
-
-    .navbar {
-      background: white;
-      color: #2b4eff;
-      display: flex;
-      width: 100%;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 32px;
-      min-height: 60px;
-      border-bottom: 1px solid #e1e5f2;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      position: sticky;
-      top: 0;
-      z-index: 999;
-    }
-
-    .navbar-left {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .navbar-logo {
-      font-size: 30px;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-    }
-
-    .navbar-title {
-      font-size: 24px;
-      font-weight: 600;
-      line-height: 1;
-    }
-
-    .navbar-right {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding-bottom: 25px;
-    }
-
-    .logout-btn {
-      background-color: #f2f4ff;
-      color: #2b4eff;
-      border: 1px solid #c6d3ff;
-      padding: 8px 16px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-
-    .logout-btn:hover {
-      background-color: #2b4eff;
-      color: white;
-      border-color: #2b4eff;
-    }
-
-    #login, #panel {
-      width: 100%;
-      max-width: 420px;
-      margin-top: 60px;
-      padding: 32px;
-      background: #fff;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-      animation: fadeIn 0.6s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    h2 {
-      text-align: center;
-      color: #2b4eff;
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 24px;
-    }
-
-    label {
-      display: block;
-      margin: 14px 0 6px;
-      font-weight: 500;
-      color: #444;
-    }
-
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid #d0d5e2;
-      border-radius: 10px;
-      font-size: 15px;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-
-    input:focus {
-      border-color: #2b4eff;
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(43, 78, 255, 0.15);
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      background: #2b4eff;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 16px;
-      margin-top: 24px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #1c34b8;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 24px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      background: #edf0ff;
-      color: #2b4eff;
-      transition: all 0.25s ease;
-    }
-
-    .tab-btn.activa {
-      background: #2b4eff;
-      color: #fff;
-    }
-
-    .reporte {
-      background: #f4f6ff;
-      border: 1px solid #dbe1ff;
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      transition: box-shadow 0.3s ease;
-    }
-
-    .reporte:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    .reporte p {
-      margin: 8px 0;
-      font-size: 14px;
-    }
-
-    .reporte button {
-      margin-top: 12px;
-      font-size: 14px;
-      padding: 10px;
-      background: #2b4eff;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-weight: 500;
-    }
-
-    .reporte button:hover {
-      background: #1d33c6;
-    }
-
-    .oculto {
-      display: none;
-    }
-
-    @media (max-width: 480px) {
-      #login, #panel {
-        margin: 20px 16px;
-        padding: 24px;
-      }
-
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-    }
-  </style>
 </head>
 <body>
   <header class="navbar oculto" id="barra">
@@ -257,19 +36,32 @@
       <button class="tab-btn activa" onclick="cambiarVista('activo', this)">Activos</button>
       <button class="tab-btn" onclick="cambiarVista('pendiente', this)">Pendientes</button>
       <button class="tab-btn" onclick="cambiarVista('solucionado', this)">Solucionados</button>
-    </div>
+  </div>
 
     <div id="reportes"></div>
   </div>
 
+  <!-- Modal de imagen -->
+  <div id="modalImagen">
+    <span onclick="cerrarModal()">&times;</span>
+    <img id="imagenModal" src="" alt="Imagen ampliada">
+  </div>
 
 </body>
 </html>
 
-
 <script>
-  // Si ya hay un usuario logueado, mostrar el panel
-  if (localStorage.getItem("id_usuario")) mostrarPanel();
+  // Validar si la sesión es válida al cargar
+  const idUsuario = localStorage.getItem("id_usuario");
+  const expira = localStorage.getItem("expira_sesion");
+
+  if (idUsuario && expira && Date.now() < parseInt(expira)) {
+    mostrarPanel();
+    iniciarTemporizadorSesion(); // Iniciar temporizador para cierre automático
+  } else {
+    localStorage.removeItem("id_usuario");
+    localStorage.removeItem("expira_sesion");
+  }
 
   // Función para iniciar sesión
   async function login() {
@@ -279,7 +71,7 @@
     try {
       const res = await fetch("http://localhost:5000/admin/login", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
       });
 
@@ -287,7 +79,10 @@
 
       const data = await res.json();
       localStorage.setItem("id_usuario", data.id);
+      localStorage.setItem("expira_sesion", Date.now() + (30 * 60 * 1000)); // 30 minutos
+      //localStorage.setItem("expira_sesion", Date.now() + (10 * 1000)); // 20 segundos
       mostrarPanel();
+      iniciarTemporizadorSesion();
 
       Swal.fire({
         icon: 'success',
@@ -320,6 +115,7 @@
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.removeItem("id_usuario");
+        localStorage.removeItem("expira_sesion");
         document.getElementById("panel").classList.add("oculto");
         document.getElementById("barra").classList.add("oculto");
         document.getElementById("login").classList.remove("oculto");
@@ -343,8 +139,36 @@
     cargarReportes("activo");
   }
 
+  // Extiende el tiempo de sesión en cada acción
+  function extenderSesion() {
+    localStorage.setItem("expira_sesion", Date.now() + (30 * 60 * 1000));
+    //localStorage.setItem("expira_sesion", Date.now() + (10 * 1000)); // 20 segundos  
+  }
+
+  // Temporizador para cerrar sesión automáticamente al vencer
+  function iniciarTemporizadorSesion() {
+    setInterval(() => {
+      const expira = parseInt(localStorage.getItem("expira_sesion"));
+      if (expira && Date.now() >= expira) {
+        localStorage.removeItem("id_usuario");
+        localStorage.removeItem("expira_sesion");
+        document.getElementById("panel").classList.add("oculto");
+        document.getElementById("barra").classList.add("oculto");
+        document.getElementById("login").classList.remove("oculto");
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Sesión expirada',
+          text: 'Tu sesión ha vencido. Iniciá sesión nuevamente.',
+          confirmButtonText: 'Aceptar'
+        });
+      }
+    }, 10000); // Chequea cada 10 segundos
+  }
+
   // Cambiar entre reportes activos, pendientes, etc.
   function cambiarVista(estado, boton) {
+    extenderSesion(); // Extiende sesión
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("activa"));
     boton.classList.add("activa");
     cargarReportes(estado);
@@ -352,6 +176,7 @@
 
   // Cargar reportes por estado
   async function cargarReportes(estado) {
+    extenderSesion(); // Extiende sesión
     try {
       const res = await fetch(`http://localhost:5000/reportes/${estado}`);
       const data = await res.json();
@@ -370,24 +195,33 @@
         const div = document.createElement("div");
         div.className = "reporte";
 
-        // Contenido del reporte
-        let html = `
-          <p><strong>ID Reporte:</strong> ${r.id_reporte}</p>
-          <p><strong>Descripción:</strong> ${r.descripcion}</p>
-          <p><strong>Categoría:</strong> ${r.nombre_categoria}</p>
-          <p><strong>Ubicación:</strong> ${r.latitud}, ${r.longitud}</p>
-          <p><strong>ID Usuario:</strong> ${r.fk_id_usuario}</p>
-        `;
-
-        // Botón "Marcar como revisado"
-        if (estado === "activo") {
-          html += `<button onclick="marcarRevisado(${r.id_reporte})">Marcar como revisado</button>`;
+        const urlImagen = "http://localhost:5000/" + r.imagen_URL;
+        let imagenHTML = "";
+        if (r.imagen_URL) {
+          imagenHTML = `
+            <div style="display: flex; align-items: center;">
+              <img src="${urlImagen}" onclick="mostrarModalImagen('${urlImagen}')" alt="Imagen del reporte">
+            </div>
+          `;
         }
 
-        // Botón "Ver en el mapa"
-        html += `<button style="background-color: gold; color: black;" onclick="verEnMapa(${r.latitud}, ${r.longitud})">Ver en el mapa</button>`;
+        let contenidoHTML = `
+          <div>
+            <p><strong>ID Reporte:</strong> ${r.id_reporte}</p>
+            <p><strong>Descripción:</strong> ${r.descripcion}</p>
+            <p><strong>Categoría:</strong> ${r.nombre_categoria}</p>
+            <p><strong>Ubicación:</strong> ${r.latitud}, ${r.longitud}</p>
+            <p><strong>ID Usuario:</strong> ${r.fk_id_usuario}</p>
+        `;
 
-        div.innerHTML = html;
+        if (estado === "activo") {
+          contenidoHTML += `<button onclick="marcarRevisado(${r.id_reporte})">Marcar como revisado</button>`;
+        }
+
+        contenidoHTML += `<button style="background-color: gold; color: black;" onclick="verEnMapa(${r.latitud}, ${r.longitud})">Ver en el mapa</button>`;
+        contenidoHTML += `</div>`;
+
+        div.innerHTML = imagenHTML + contenidoHTML;
         contenedor.appendChild(div);
       });
     } catch (error) {
@@ -401,12 +235,15 @@
 
   // Abrir Google Maps con coordenadas
   function verEnMapa(lat, lng) {
+    extenderSesion(); // Extiende sesión
     const url = `https://www.google.com/maps?q=${lat},${lng}`;
     window.open(url, "_blank");
   }
 
   // Marcar un reporte como revisado
   async function marcarRevisado(id) {
+    extenderSesion(); // Extiende sesión
+
     const confirmacion = await Swal.fire({
       title: '¿Marcar como revisado?',
       text: 'Esta acción no se puede deshacer.',
@@ -424,7 +261,7 @@
       const id_usuario = localStorage.getItem("id_usuario");
       const res = await fetch(`http://localhost:5000/reportes/${id}/revisar`, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_usuario })
       });
 
@@ -448,4 +285,305 @@
       });
     }
   }
+
+  function mostrarModalImagen(url) {
+    const modal = document.getElementById("modalImagen");
+    const img = document.getElementById("imagenModal");
+    img.src = url;
+    modal.style.display = "flex";
+  }
+
+  function cerrarModal() {
+    document.getElementById("modalImagen").style.display = "none";
+  }
+
+  // (opcional) cerrar con ESC o clic fuera
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") cerrarModal();
+  });
+  document.getElementById("modalImagen").addEventListener("click", (e) => {
+    if (e.target.id === "modalImagen") cerrarModal();
+  });
 </script>
+
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(to right, #eef2ff, #f9faff);
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+  }
+
+  .navbar {
+    background: white;
+    color: #2b4eff;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 32px;
+    min-height: 60px;
+    border-bottom: 1px solid #e1e5f2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+  }
+
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .navbar-logo {
+    font-size: 25px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar-title {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .navbar-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 25px;
+  }
+
+  .logout-btn {
+    background-color: #f2f4ff;
+    color: #2b4eff;
+    border: 1px solid #c6d3ff;
+    padding: 8px 16px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .logout-btn:hover {
+    background-color: #2b4eff;
+    color: white;
+    border-color: #2b4eff;
+  }
+
+  #login, #panel {
+    width: 100%;
+    margin-top: 60px;
+    padding: 32px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    animation: fadeIn 0.6s ease;
+  }
+
+  #login {
+    max-width: 500px;
+  }
+
+  #panel {
+    max-width: 600px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  h2 {
+    text-align: center;
+    color: #2b4eff;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+
+  label {
+    display: block;
+    margin: 14px 0 6px;
+    font-weight: 500;
+    color: #444;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #d0d5e2;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  input:focus {
+    border-color: #2b4eff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(43, 78, 255, 0.15);
+  }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    background: #2b4eff;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    margin-top: 24px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  button:hover {
+    background: #1c34b8;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #edf0ff;
+    color: #2b4eff;
+    transition: all 0.25s ease;
+  }
+
+  .tab-btn.activa {
+    background: #2b4eff;
+    color: #fff;
+  }
+
+  .reporte {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #f4f6ff;
+    border: 1px solid #dbe1ff;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .reporte:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .reporte p {
+    margin: 8px 0;
+    font-size: 14px;
+  }
+
+  .reporte button {
+    margin-top: 12px;
+    font-size: 14px;
+    padding: 10px;
+    background: #2b4eff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  .reporte button:hover {
+    background: #1d33c6;
+  }
+
+  .reporte img {
+    width: 200px;
+    height: auto;
+    max-height: 100px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .oculto {
+    display: none;
+  }
+
+  @media (max-width: 480px) {
+    #login, #panel {
+      margin: 20px 16px;
+      padding: 24px;
+    }
+
+    header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .reporte {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .reporte img {
+      width: 100%;
+      max-height: none;
+    }
+  }
+
+  /* MODAL de imagen */
+  #modalImagen {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  #modalImagen img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+  }
+
+  #modalImagen span {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 40px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+</style>
+
