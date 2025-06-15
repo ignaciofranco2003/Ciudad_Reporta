@@ -1,10 +1,12 @@
 import os
 from flask import Flask, request, jsonify
 from flask import send_from_directory
+from flask import current_app
 import mysql.connector
 from flask_cors import CORS
 from datetime import datetime
 from werkzeug.utils import secure_filename
+
 
 
 app = Flask(__name__)
@@ -260,6 +262,33 @@ def listar_por_usuario(id_usuario):
         print(f"[ERROR] {e}")
         return jsonify({'error': 'No se pudieron obtener los reportes'}), 500
 
+#----------------------------- Listado reportes por usuario por estado------------------------------------- 
+@app.route('/reportes/<int:id_usuario>/<estado>', methods=['GET'])
+def listar_por_usuario_y_estado(id_usuario, estado):
+    try:
+        cursor.execute("""
+            SELECT r.id_reporte, c.nombre_categoria, r.descripcion, 
+                   r.latitud, r.longitud, r.imagen_URL, r.solucionada, 
+                   r.estado
+            FROM reporte r
+            JOIN categorias_problematicas c ON r.fk_id_categoria = c.id_categoria_problematica
+            WHERE r.fk_id_usuario = %s AND r.estado = %s
+        """, (id_usuario, estado))
+
+        resultados = cursor.fetchall()
+
+        if not resultados:
+            return jsonify({'mensaje': f'No hay reportes con estado: {estado}'}), 200
+
+        columnas = [desc[0] for desc in cursor.description]
+        reportes = [dict(zip(columnas, fila)) for fila in resultados]
+
+        return jsonify({'reportes': reportes}), 200
+
+    except Exception as e:
+        print(f"[ERROR] {e}")
+        return jsonify({'error': 'No se pudieron obtener los reportes'}), 500
+
 #-------------------------------------------- Detalles de un reporte----------------------------------------------
 @app.route('/detalles_reporte/<int:id_reporte>', methods=['GET'])
 def detalle_reporte(id_reporte):
@@ -273,19 +302,20 @@ def detalle_reporte(id_reporte):
             WHERE r.id_reporte = %s
         """, (id_reporte,))
         
-        resultados = cursor.fetchall()
+        resultado = cursor.fetchone()
 
-        if not resultados:
-            return jsonify({'mensaje': f'No hay reportes con la id: {id_reporte}'}), 200
+        if not resultado:
+            return jsonify({'mensaje': f'No hay reportes con la id: {id_reporte}'}), 404
 
         columnas = [desc[0] for desc in cursor.description]
-        reportes = [dict(zip(columnas, fila)) for fila in resultados]
+        reporte = dict(zip(columnas, resultado))
 
-        return jsonify({'reportes': reportes}), 200
+        return jsonify(reporte), 200
 
     except Exception as e:
         print(f"[ERROR] {e}")
-        return jsonify({'error': 'No se pudieron obtener los reportes'}), 500
+        return jsonify({'error': 'No se pudieron obtener los datos del reporte'}), 500
+
 #-------------------------------------------- Actualizar reportes ----------------------------------------------
 @app.route('/reportes/<int:id_reporte>', methods=['PUT'])
 def actualizar_reporte_usuario(id_reporte):
@@ -331,24 +361,32 @@ def actualizar_reporte_usuario(id_reporte):
         return jsonify({'error': 'No se pudo actualizar el reporte'}), 500
 
 #-------------------------------------------- Eliminar de problematicas ----------------------------------------------
-@app.route('/borrar_reporte/<int:id_reporte>', methods=['DELETE'])
-def borrar_reporte(id_reporte):
-    data = request.get_json()
-    id_usuario = data.get('id_usuario')
+@app.route('/borrar_reporte/<int:id_reporte>/<int:id_usuario>', methods=['DELETE'])
+def borrar_reporte(id_reporte, id_usuario):
 
     try:
-        cursor.execute("SELECT fk_id_usuario FROM reporte WHERE id_reporte = %s", (id_reporte,))
+        # Obtener usuario dueño del reporte y la ruta de la imagen
+        cursor.execute("SELECT fk_id_usuario, imagen_URL FROM reporte WHERE id_reporte = %s", (id_reporte,))
         result = cursor.fetchone()
 
         if result:
-            if result [0] == id_usuario:
+            fk_usuario, ruta_imagen = result
+            if fk_usuario == id_usuario:
+                # Eliminar imagen física si existe
+                if ruta_imagen:
+                    # Construir ruta absoluta del archivo
+                    path_imagen = os.path.join(current_app.root_path, ruta_imagen.lstrip('/'))
+                    if os.path.exists(path_imagen):
+                        os.remove(path_imagen)
+
+                # Borrar el reporte en la base
                 cursor.execute("DELETE FROM reporte WHERE id_reporte = %s", (id_reporte,))
                 conn.commit()
                 return jsonify({'mensaje': 'Reporte eliminado'}), 200
             else:
                 return jsonify({'error': 'No tiene permiso para eliminar este reporte'}), 403
         else:
-            return jsonify({'error': 'El reporte no existe'}), 403
+            return jsonify({'error': 'El reporte no existe'}), 404
     except Exception as e:
         print(f"[ERROR] {e}")
         return jsonify({'error': 'No se pudo eliminar el reporte'}), 500
