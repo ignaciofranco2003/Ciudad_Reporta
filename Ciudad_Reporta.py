@@ -33,8 +33,6 @@ EMAIL_CONFIG = {
     'password': 'anxm udpk jsmg bhap'
 }
 
-
-
 #------------------------------------------- Init DB -----------------------------------------------
 def init_db():
     cursor.execute("CREATE DATABASE IF NOT EXISTS ciudad_reporta")
