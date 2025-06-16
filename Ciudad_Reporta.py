@@ -251,12 +251,12 @@ def listar_por_usuario(id_usuario):
         resultados = cursor.fetchall()
 
         if not resultados:
-            return jsonify({'mensaje': f'No hay reportes con del usuario con id: {id_usuario}'}), 200
+            return jsonify({'mensaje': f'No hay reportes con del usuario con id: {id_usuario}'}), 204
 
         columnas = [desc[0] for desc in cursor.description]
         reportes = [dict(zip(columnas, fila)) for fila in resultados]
 
-        return jsonify({'reportes': reportes}), 200
+        return jsonify(reportes), 200
 
     except Exception as e:
         print(f"[ERROR] {e}")
