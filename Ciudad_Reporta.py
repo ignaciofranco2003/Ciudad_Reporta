@@ -6,8 +6,9 @@ import mysql.connector
 from flask_cors import CORS
 from datetime import datetime
 from werkzeug.utils import secure_filename
-
-
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 CORS(app)  # habilita CORS para todos los orígenes y rutas
@@ -24,6 +25,17 @@ conn = mysql.connector.connect(
 
 cursor = conn.cursor()
 
+# Configuración del correo
+EMAIL_CONFIG = {
+    'smtp_server': 'smtp.gmail.com',
+    'smtp_port': 587,
+    'sender_email': 'dannafoxldl@gmail.com',
+    'password': 'anxm udpk jsmg bhap'
+}
+
+
+
+#------------------------------------------- Init DB -----------------------------------------------
 def init_db():
     cursor.execute("CREATE DATABASE IF NOT EXISTS ciudad_reporta")
     conn.database = "ciudad_reporta"
@@ -392,6 +404,7 @@ def borrar_reporte(id_reporte, id_usuario):
         return jsonify({'error': 'No se pudo eliminar el reporte'}), 500
 
 #-------------------------------------------- Actualizar estados (admin y usuario) ----------------------------------------------
+# Ruta para marcar como revisado
 @app.route('/reportes/<int:id_reporte>/revisar', methods=['PUT'])
 def marcar_como_revisado(id_reporte):
     data = request.get_json()
@@ -403,14 +416,19 @@ def marcar_como_revisado(id_reporte):
         rol = cursor.fetchone()
 
         if rol and rol[0] == 'administrador':
-            # Verificar estado actual del reporte
-            cursor.execute("SELECT estado FROM reporte WHERE id_reporte = %s", (id_reporte,))
+            # Verificar estado actual del reporte y obtener email del usuario dueño del reporte
+            cursor.execute("""
+                SELECT r.estado, u.email 
+                FROM reporte r
+                JOIN usuarios u ON r.fk_id_usuario = u.id_usuario
+                WHERE r.id_reporte = %s
+            """, (id_reporte,))
             resultado = cursor.fetchone()
 
             if not resultado:
                 return jsonify({'error': 'Reporte no encontrado'}), 404
 
-            estado_actual = resultado[0]
+            estado_actual, email_usuario = resultado
 
             if estado_actual == 'solucionado':
                 return jsonify({'error': 'No se puede marcar como pendiente un reporte ya solucionado'}), 400
@@ -418,7 +436,40 @@ def marcar_como_revisado(id_reporte):
             # Actualizar estado a 'pendiente'
             cursor.execute("UPDATE reporte SET estado = 'Pendiente' WHERE id_reporte = %s", (id_reporte,))
             conn.commit()
-            return jsonify({'mensaje': 'Reporte marcado como pendiente'}), 200
+
+            asunto = "Tu reporte ha sido marcado como pendiente"
+            mensaje = """
+                <html>
+                <body style="font-family: Arial, sans-serif; color: #333;">
+                    <div style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                    
+
+                    <div style="text-align: center; margin-bottom: 20px; font-size: 32px; font-weight: bold; color: #d35400;">
+                    <br/>
+                    📍 Ciudad Reporta
+                    </div>
+
+                    <h2 style="color: #2c3e50;">🔔 Reporte actualizado</h2>
+
+                    <p>Hola,</p>
+
+                    <p><strong>Uno de tus reportes ha sido revisado</strong> y marcado como <strong style="color: #d35400;">pendiente</strong> por un administrador.</p>
+
+                    <p>✔️ Si el reporte ya fue solucionado, por favor márcalo como <strong>'Solucionado'</strong>.</p>
+                    <p>❗ Si el reporte continúa, seleccioná la opción <strong>'Persiste'</strong>.</p>
+
+                    <p>Puedes ver tus reportes pendientes desde la app:</p>
+                    <p><strong>Mis Reportes &gt; Pendientes</strong></p>
+
+                    <br/>
+                    <p style="font-size: 12px; color: #999;">Este es un mensaje automático. No respondas a este correo.</p>
+                    </div>
+                </body>
+                </html>
+            """
+            enviar_correo(email_usuario, asunto, mensaje)
+
+            return jsonify({'mensaje': 'Reporte marcado como pendiente y correo enviado'}), 200
         else:
             return jsonify({'error': 'No autorizado'}), 403
 
@@ -484,16 +535,12 @@ def obtener_categorias():
 def servir_imagen(nombre):
     return send_from_directory('static/imagenes', nombre)
 
-#-------------------------------------------- Main ----------------------------------------------
-
+#-------------------------------------------- Index ----------------------------------------------
 @app.route('/')
 def panel_admin():
     return app.send_static_file('index.html')
 
-@app.route('/prueba')
-def prueba():
-    return app.send_static_file('prueba.html')
-
+#-------------------------------------------- Subir Imagenes ----------------------------------------------
 @app.route('/subir-imagen', methods=['POST'])
 def subir_imagen():
     if 'imagen' not in request.files:
@@ -514,6 +561,27 @@ def subir_imagen():
     url = f"/static/imagenes/{nuevo_nombre}"
     return jsonify({'url': url}), 200
 
+#-------------------------------------------- Enviar Emails ----------------------------------------------
+# Función para enviar correo
+def enviar_correo(destinatario, asunto, mensaje):
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = EMAIL_CONFIG['sender_email']
+        msg['To'] = destinatario
+        msg['Subject'] = asunto
+
+        msg.attach(MIMEText(mensaje, 'html'))
+
+        server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['smtp_port'])
+        server.starttls()
+        server.login(EMAIL_CONFIG['sender_email'], EMAIL_CONFIG['password'])
+        server.sendmail(EMAIL_CONFIG['sender_email'], destinatario, msg.as_string())
+        server.quit()
+        print(f"[INFO] Correo enviado a {destinatario}")
+    except Exception as e:
+        print(f"[ERROR] Fallo al enviar correo: {e}")
+
+#-------------------------------------------- Main ----------------------------------------------
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, host="0.0.0.0", port=5000)

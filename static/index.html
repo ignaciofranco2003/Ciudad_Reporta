@@ -240,7 +240,6 @@
     window.open(url, "_blank");
   }
 
-  // Marcar un reporte como revisado
   async function marcarRevisado(id) {
     extenderSesion(); // Extiende sesión
 
@@ -257,6 +256,15 @@
 
     if (!confirmacion.isConfirmed) return;
 
+    // Mostrar cartelito de cargando
+    Swal.fire({
+      title: 'Actualizando...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     try {
       const id_usuario = localStorage.getItem("id_usuario");
       const res = await fetch(`http://localhost:5000/reportes/${id}/revisar`, {
@@ -264,6 +272,8 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_usuario })
       });
+
+      Swal.close(); // Cerrar el loading
 
       if (res.ok) {
         Swal.fire({
@@ -278,6 +288,7 @@
         throw new Error();
       }
     } catch (error) {
+      Swal.close(); // Cerrar el loading
       Swal.fire({
         icon: 'error',
         title: 'Error al marcar',
@@ -285,6 +296,7 @@
       });
     }
   }
+
 
   function mostrarModalImagen(url) {
     const modal = document.getElementById("modalImagen");
