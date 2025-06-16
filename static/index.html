@@ -179,17 +179,18 @@
     extenderSesion(); // Extiende sesión
     try {
       const res = await fetch(`http://localhost:5000/reportes/${estado}`);
-      const data = await res.json();
-      const reportes = Array.isArray(data) ? data : data.reportes;
 
       const contenedor = document.getElementById("reportes");
       contenedor.innerHTML = "";
       document.getElementById("tituloEstado").textContent = `Reportes ${estado.charAt(0).toUpperCase() + estado.slice(1)}`;
 
-      if (!reportes.length) {
-        contenedor.innerHTML = "<p>No hay reportes.</p>";
+      if (res.status === 204) {
+        contenedor.innerHTML = `<p>No hay reportes del estado ${estado}</p>`;
         return;
       }
+
+      const data = await res.json();
+      const reportes = Array.isArray(data) ? data : data.reportes;
 
       reportes.forEach(r => {
         const div = document.createElement("div");
@@ -232,6 +233,8 @@
       });
     }
   }
+
+
 
   // Abrir Google Maps con coordenadas
   function verEnMapa(lat, lng) {

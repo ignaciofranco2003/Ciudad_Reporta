@@ -234,7 +234,7 @@ def listar_por_estado(estado):
         resultados = cursor.fetchall()
 
         if not resultados:
-            return jsonify({'mensaje': f'No hay reportes con el estado: {estado}'}), 200
+            return jsonify({'mensaje': f'No hay reportes con el estado: {estado}'}), 204
 
         columnas = [desc[0] for desc in cursor.description]
         reportes = [dict(zip(columnas, fila)) for fila in resultados]
