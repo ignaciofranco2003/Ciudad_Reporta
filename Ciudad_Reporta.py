@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask import send_from_directory
 from flask import current_app
@@ -17,10 +18,13 @@ CORS(app)  # habilita CORS para todos los orígenes y rutas
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'imagenes')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
+load_dotenv()  # Carga variables del archivo .env
+
 conn = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='1234'
+    host=os.getenv("DB_HOST"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASS")
 )
 
 cursor = conn.cursor()
