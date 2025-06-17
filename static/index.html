@@ -208,11 +208,11 @@
 
         let contenidoHTML = `
           <div>
-            <p><strong>ID Reporte:</strong> ${r.id_reporte}</p>
-            <p><strong>Descripción:</strong> ${r.descripcion}</p>
-            <p><strong>Categoría:</strong> ${r.nombre_categoria}</p>
-            <p><strong>Ubicación:</strong> ${r.latitud}, ${r.longitud}</p>
-            <p><strong>ID Usuario:</strong> ${r.fk_id_usuario}</p>
+            <p style="max-width: 16rem;"><strong>ID Reporte:</strong> ${r.id_reporte}</p>
+            <p style="max-width: 16rem;"><strong>Descripción:</strong> ${r.descripcion}</p>
+            <p style="max-width: 16rem;"><strong>Categoría:</strong> ${r.nombre_categoria}</p>
+            <p style="max-width: 16rem;"><strong>Ubicación:</strong> ${r.latitud}, ${r.longitud}</p>
+            <p style="max-width: 16rem;"><strong>ID Usuario:</strong> ${r.fk_id_usuario}</p>
         `;
 
         if (estado === "activo") {
