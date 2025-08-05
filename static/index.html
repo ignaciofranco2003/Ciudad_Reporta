@@ -6,12 +6,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
   <header class="navbar oculto" id="barra">
     <div class="navbar-left">
       <span class="navbar-logo">📍</span>
       <span class="navbar-title">Ciudad Reporta</span>
+  
+      <div class="navbar-section-container">
+        <span class="navbar-separator">|</span>
+        <span class="navbar-section" onclick="mostrarPanel()">Reportes</span>
+        <span class="navbar-separator">|</span>
+        <span class="navbar-section" onclick="mostrarPanelCategorias('categorias')">Categorías</span>
+      </div>
     </div>
+  
     <div class="navbar-right">
       <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
     </div>
@@ -28,6 +37,18 @@
     </form>
   </div>
   
+    <!-- Panel de ABM Categorías -->
+  <section id="panel-categorias" class="panel-seccion oculto">
+    <h2>Categorías</h2>
+    <div id="categorias"></div>
+    
+    <div class="botones">
+      <button onclick="VerCategorias()">Ver categorias</button>
+      <button onclick="altaCategorias()" style="background-color: rgba(1, 99, 1, 0.884);">Alta</button>
+      <button onclick="bajaCategorias()" style="background-color: rgba(184, 0, 0, 0.925);">Baja</button>
+    </div>
+
+  </section>
 
   <div id="panel" class="oculto">
     <h2 id="tituloEstado">Reportes Activos</h2>
@@ -56,9 +77,15 @@
   const expira = localStorage.getItem("expira_sesion");
 
   if (idUsuario && expira && Date.now() < parseInt(expira)) {
-    mostrarPanel();
-    iniciarTemporizadorSesion(); // Iniciar temporizador para cierre automático
-  } else {
+    const seccion = localStorage.getItem("seccion_activa") || "reportes";
+    if (seccion === "categorias") {
+      mostrarPanelCategorias();
+    } else {
+      mostrarPanel();
+    }
+    iniciarTemporizadorSesion();
+  } 
+  else {
     localStorage.removeItem("id_usuario");
     localStorage.removeItem("expira_sesion");
   }
@@ -116,7 +143,9 @@
       if (result.isConfirmed) {
         localStorage.removeItem("id_usuario");
         localStorage.removeItem("expira_sesion");
+        localStorage.removeItem("seccion_activa");
         document.getElementById("panel").classList.add("oculto");
+        document.getElementById("panel-categorias").classList.add("oculto");
         document.getElementById("barra").classList.add("oculto");
         document.getElementById("login").classList.remove("oculto");
 
@@ -133,10 +162,21 @@
 
   // Mostrar el panel de administración
   function mostrarPanel() {
+    localStorage.setItem("seccion_activa", "reportes"); //guardar
+    document.getElementById('panel-categorias').classList.add('oculto');
     document.getElementById("login").classList.add("oculto");
     document.getElementById("panel").classList.remove("oculto");
     document.getElementById("barra").classList.remove("oculto");
     cargarReportes("activo");
+  }
+
+  // Mostrar el panel de administración de categorias
+  function mostrarPanelCategorias() {
+    localStorage.setItem("seccion_activa", "categorias"); //guardar
+    document.getElementById('panel-categorias').classList.remove('oculto');
+    document.getElementById("panel").classList.add("oculto");
+    document.getElementById("login").classList.add("oculto");
+    document.getElementById("barra").classList.remove("oculto");
   }
 
   // Extiende el tiempo de sesión en cada acción
@@ -234,8 +274,6 @@
     }
   }
 
-
-
   // Abrir Google Maps con coordenadas
   function verEnMapa(lat, lng) {
     extenderSesion(); // Extiende sesión
@@ -300,7 +338,6 @@
     }
   }
 
-
   function mostrarModalImagen(url) {
     const modal = document.getElementById("modalImagen");
     const img = document.getElementById("imagenModal");
@@ -316,9 +353,245 @@
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") cerrarModal();
   });
+
   document.getElementById("modalImagen").addEventListener("click", (e) => {
     if (e.target.id === "modalImagen") cerrarModal();
   });
+
+  async function VerCategorias() {
+    extenderSesion();
+
+    try {
+      const res = await fetch("http://localhost:5000/categorias");
+
+      if (!res.ok) throw new Error("No se pudieron cargar las categorías.");
+
+      const categorias = await res.json();
+
+      const listaHTML = categorias.length > 0
+        ? categorias.map(cat => `• ${cat.nombre}`).join("<br>")
+        : "<i>No hay categorías registradas.</i>";
+
+      Swal.fire({
+        title: 'Categorías disponibles',
+        html: `<div style="text-align: left;">${listaHTML}</div>`,
+        confirmButtonText: 'Cerrar'
+      });
+
+    } catch (error) {
+      Swal.fire({
+        title: 'Error',
+        text: 'Ocurrió un problema al cargar las categorías.',
+        icon: 'error'
+      });
+    }
+  }
+
+  async function altaCategorias() {
+    extenderSesion();
+
+    let nombre = '';
+    let pasoConfirmacion = false;
+
+    const swal = Swal.mixin({
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      allowOutsideClick: () => !Swal.isLoading()
+    });
+
+    while (true) {
+      if (!pasoConfirmacion) {
+        const { value, dismiss } = await swal.fire({
+          title: 'Alta de categoría',
+          input: 'text',
+          inputLabel: 'Nombre de la nueva categoría',
+          inputPlaceholder: 'Ej: Espacios verdes',
+          confirmButtonText: 'Siguiente',
+          showCancelButton: true,
+          preConfirm: (value) => {
+            if (!value.trim()) {
+              Swal.showValidationMessage('El nombre no puede estar vacío.');
+              return false;
+            }
+            return value.trim();
+          }
+        });
+
+        if (dismiss) return; // Canceló
+
+        nombre = value.trim();
+        pasoConfirmacion = true; // Pasamos a confirmación
+      } else {
+        const { isConfirmed, isDenied, dismiss } = await swal.fire({
+          title: '¿Confirmar alta?',
+          html: `Se dará de alta la categoría <strong>"${nombre}"</strong>.`,
+          icon: 'question',
+          confirmButtonText: 'Sí, crear',
+          showDenyButton: true,
+          denyButtonText: 'Volver',
+          showCancelButton: true,
+          cancelButtonText: 'Cancelar'
+        });
+
+        if (dismiss) return;
+
+        if (isDenied) {
+          pasoConfirmacion = false; // Volver al input
+          continue;
+        }
+
+        if (isConfirmed) {
+          // Hacer POST al backend
+          const id_usuario = localStorage.getItem("id_usuario");
+          try {
+            Swal.showLoading();
+            const res = await fetch("http://localhost:5000/categorias", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nombre, id_usuario})
+            });
+
+            Swal.hideLoading();
+
+            if (res.status === 409) {
+              const data = await res.json();
+              await swal.fire({
+                icon: 'warning',
+                title: 'Duplicado',
+                text: data.error || 'Ya existe una categoría con ese nombre.',
+                confirmButtonText: 'Volver'
+              });
+              pasoConfirmacion = false; // Volver al input
+              continue;
+            }
+
+            if (!res.ok) {
+              const data = await res.json();
+              await swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.error || 'No se pudo crear la categoría.',
+                confirmButtonText: 'Volver'
+              });
+              pasoConfirmacion = false; // Volver al input
+              continue;
+            }
+
+            await swal.fire({
+              icon: 'success',
+              title: 'Categoría creada',
+              text: `La categoría "${nombre}" fue creada correctamente.`,
+              timer: 2000,
+              showCancelButton: false
+            });
+            return; // Salir porque fue exitosa
+
+          } catch (error) {
+            Swal.hideLoading();
+            await swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'No se pudo crear la categoría.',
+              confirmButtonText: 'Volver'
+            });
+            pasoConfirmacion = false;
+            continue;
+          }
+        }
+      }
+    }
+  }
+
+  async function bajaCategorias() {
+    extenderSesion();
+
+    try {
+      const res = await fetch("http://localhost:5000/categorias");
+      if (!res.ok) throw new Error("Error al obtener categorías");
+
+      const categorias = await res.json();
+
+      const opciones = [
+        `<option value="" disabled selected>${categorias.length ? "Seleccione una categoría" : "No hay categorías disponibles"}</option>`,
+        ...categorias.map(cat => `<option value="${cat.id}">${cat.nombre}</option>`)
+      ].join("");
+
+      const { value: idSeleccionado } = await Swal.fire({
+        title: 'Baja de categoría',
+        html: `
+          <select id="categoria-select" class="swal2-select" style="width: 20rem; text-align: left;" ${categorias.length === 0 ? "disabled" : ""}>
+            ${opciones}
+          </select>
+          <div id="error-baja-categoria" style="color: red; font-size: 0.9em; margin-top: 5px;"></div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar',
+        preConfirm: async () => {
+          const select = document.getElementById('categoria-select');
+          const errorDiv = document.getElementById('error-baja-categoria');
+          errorDiv.textContent = '';
+
+          if (!select.value) {
+            errorDiv.textContent = 'Debe seleccionar una categoría.';
+            return false;
+          }
+
+          const categoriaNombre = categorias.find(c => c.id == select.value)?.nombre;
+
+          const confirmacion = await Swal.fire({
+            title: '¿Confirmar baja?',
+            text: `Se eliminará la categoría "${categoriaNombre}". Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+          });
+
+          if (!confirmacion.isConfirmed) return false;
+
+          try {
+            const id_usuario = localStorage.getItem("id_usuario");
+            const deleteRes = await fetch(`http://localhost:5000/categorias/${id_usuario}/${select.value}`, {
+              method: "DELETE"
+            });
+
+            const data = await deleteRes.json();
+
+            if (!deleteRes.ok) {
+              errorDiv.textContent = data.error || data.mensaje || 'No se pudo eliminar la categoría.';
+              return false;
+            }
+
+            const textoFinal = data.mensaje || `"${categoriaNombre}" fue eliminada correctamente.`;
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Categoría eliminada',
+              text: textoFinal,
+              timer: 3000,
+              showConfirmButton: false
+            });
+
+            return true;
+
+          } catch (err) {
+            errorDiv.textContent = 'Error de red o del servidor.';
+            return false;
+          }
+        }
+      });
+
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron cargar las categorías.'
+      });
+    }
+  }
+
 </script>
 
 <style>
@@ -403,7 +676,7 @@
     border-color: #2b4eff;
   }
 
-  #login, #panel {
+  #login, #panel, #panel-categorias{
     width: 100%;
     margin-top: 60px;
     padding: 32px;
@@ -417,7 +690,7 @@
     max-width: 500px;
   }
 
-  #panel {
+  #panel, #panel-categorias{
     max-width: 600px;
   }
 
@@ -550,7 +823,7 @@
   }
 
   @media (max-width: 480px) {
-    #login, #panel {
+    #login, #panel, #panel-categorias{
       margin: 20px 16px;
       padding: 24px;
     }
@@ -600,5 +873,25 @@
     cursor: pointer;
     font-weight: bold;
   }
-</style>
 
+  .navbar-section {
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 400;
+    color: #000000;
+  }
+
+  .navbar-section:hover {
+    text-decoration: underline;
+  }
+
+  .navbar-separator {
+    font-weight: bold;
+    margin: 0 5px;
+  }
+
+  #error-categoria{
+    text-align: center;
+  }
+
+</style>

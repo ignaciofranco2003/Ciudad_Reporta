@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from flask import send_from_directory
 from flask import current_app
 import mysql.connector
+from datetime import datetime
 from flask_cors import CORS
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -31,10 +32,10 @@ cursor = conn.cursor()
 
 # Configuración del correo
 EMAIL_CONFIG = {
-    'smtp_server': 'smtp.gmail.com',
-    'smtp_port': 587,
-    'sender_email': 'dannafoxldl@gmail.com',
-    'password': 'anxm udpk jsmg bhap'
+    'smtp_server':os.getenv("SERVER"),
+    'smtp_port': os.getenv("PORT"),
+    'sender_email': os.getenv("SENDER"),
+    'password': os.getenv("PASS")
 }
 
 #------------------------------------------- Init DB -----------------------------------------------
@@ -45,7 +46,8 @@ def init_db():
     cursor.execute("""
             CREATE TABLE IF NOT EXISTS categorias_problematicas (
                 id_categoria_problematica INT AUTO_INCREMENT PRIMARY KEY,
-                nombre_categoria VARCHAR(100) NOT NULL
+                nombre_categoria VARCHAR(100) NOT NULL,
+                estado_categoria BOOLEAN DEFAULT TRUE
             );
                     """)
 
@@ -92,8 +94,9 @@ def init_db():
                 longitud FLOAT NOT NULL,
                 imagen_URL VARCHAR (50) NOT NULL,
                 solucionada BOOLEAN DEFAULT FALSE,
-                fk_id_usuario INT,
                 estado VARCHAR(20) DEFAULT 'activo',
+                fecha DATETIME NOT NULL,
+                fk_id_usuario INT,
                 FOREIGN KEY (fk_id_usuario) REFERENCES usuarios(id_usuario),
                 FOREIGN KEY (fk_id_categoria) REFERENCES categorias_problematicas(id_categoria_problematica)
             );
@@ -164,6 +167,24 @@ def login_admin():
         print(f"[ERROR] {e}")
         return jsonify({'error': 'Error al procesar login'}), 500
 
+@app.route("/verificar_cuenta", methods=["POST"])
+def verificar_cuenta():
+    try:
+        datos = request.get_json()
+        email = datos.get("email")
+
+        if not email:
+            return jsonify({"error": "Falta el campo 'email'"}), 400
+
+        cursor.execute("SELECT id_usuario FROM usuarios WHERE email = %s", (email,))
+        resultado = cursor.fetchone()
+
+        return jsonify({
+            "registrado": resultado is not None
+        })
+    except Exception as e:
+        return jsonify({"error": "Error en el servidor", "detalle": str(e)}), 500
+
 #-------------------------------------------- Registro de problematicas ----------------------------------------------
 @app.route('/reporte', methods=['POST'])
 def crear_problematica():
@@ -174,7 +195,9 @@ def crear_problematica():
     longitud = data.get('longitud') #FLOAT
     imagen_URL = data.get('imagen_URL') #STRING
     usuario_id = data.get('usuario_id') #INT
-    
+
+    fecha = datetime.now()
+
     solucionada = False #BOOLEAN, por defecto es false
     estado = "Activo" #STRING, por defecto es activo
 
@@ -188,7 +211,7 @@ def crear_problematica():
         else:
             return jsonify({'error': 'Categoria no encontrada'}), 400
 
-        cursor.execute("INSERT INTO reporte (fk_id_categoria,descripcion, latitud, longitud, imagen_URL, solucionada, fk_id_usuario, estado) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (fk_id_categoria, descripcion, latitud, longitud, imagen_URL, solucionada, usuario_id, estado))
+        cursor.execute("INSERT INTO reporte (fk_id_categoria,descripcion, latitud, longitud, imagen_URL, solucionada, fk_id_usuario, estado, fecha) VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s)", (fk_id_categoria, descripcion, latitud, longitud, imagen_URL, solucionada, usuario_id, estado, fecha))
         conn.commit()
         return jsonify({'mensaje': 'reporte creado'}), 201
     except Exception as e:
@@ -202,7 +225,7 @@ def listar_solucionadas():
         cursor.execute("""
             SELECT r.id_reporte, c.nombre_categoria, r.descripcion, 
                    r.latitud, r.longitud, r.imagen_URL, r.solucionada, 
-                   r.fk_id_usuario, r.estado
+                   r.fk_id_usuario, r.estado, r.fecha
             FROM reporte r
             JOIN categorias_problematicas c ON r.fk_id_categoria = c.id_categoria_problematica
             WHERE r.solucionada = TRUE
@@ -517,17 +540,19 @@ def finalizar_reporte(id_reporte):
 @app.route('/categorias', methods=['GET'])
 def obtener_categorias():
     try:
-        cursor.execute("SELECT id_categoria_problematica, nombre_categoria FROM categorias_problematicas")
+        cursor.execute("""
+            SELECT id_categoria_problematica, nombre_categoria 
+            FROM categorias_problematicas 
+            WHERE estado_categoria = 1
+        """)
         resultados = cursor.fetchall()
-
-        if not resultados:
-            return jsonify({'mensaje': 'No hay categorías registradas'}), 404
 
         categorias = [
             {'id': fila[0], 'nombre': fila[1]}
             for fila in resultados
         ]
-        return jsonify(categorias), 200
+
+        return jsonify(categorias), 200 
 
     except Exception as e:
         return jsonify({'error': 'Error al obtener categorías', 'detalles': str(e)}), 500
@@ -582,6 +607,133 @@ def enviar_correo(destinatario, asunto, mensaje):
         print(f"[INFO] Correo enviado a {destinatario}")
     except Exception as e:
         print(f"[ERROR] Fallo al enviar correo: {e}")
+
+#-------------------------------------------- Alta categorias ----------------------------------------------
+@app.route("/categorias", methods=["POST"])
+def crear_categoria():
+    data = request.get_json()
+    nombre = data.get("nombre", "").strip()
+    id_admin = data.get("id_usuario")
+
+    if not nombre:
+        return jsonify({"error": "El nombre es obligatorio."}), 400
+
+    if not id_admin:
+        return jsonify({"error": "El id de usuario es obligatorio."}), 400
+
+    try:
+        # Verificar si el usuario existe y es administrador
+        cursor.execute("SELECT rol FROM usuarios WHERE id_usuario = %s", (id_admin,))
+        resultado = cursor.fetchone()
+        if not resultado:
+            return jsonify({"error": "Usuario no encontrado."}), 404
+        rol = resultado[0]
+        if rol.lower() != "administrador":
+            return jsonify({"error": "Acceso denegado. No es administrador."}), 403
+
+    except Exception as e:
+        print("Error al validar usuario:", e)
+        return jsonify({"error": "Error interno al validar usuario."}), 500
+
+    try:
+        # Verificar existencia ignorando mayúsculas/minúsculas
+        cursor.execute("""
+            SELECT id_categoria_problematica FROM categorias_problematicas
+            WHERE LOWER(nombre_categoria) = LOWER(%s)
+        """, (nombre,))
+        existe = cursor.fetchone()
+
+        if existe:
+            return jsonify({"error": "Ya existe una categoría con ese nombre."}), 409
+
+        # Insertar si no existe
+        cursor.execute("""
+            INSERT INTO categorias_problematicas (nombre_categoria)
+            VALUES (%s)
+        """, (nombre,))
+        conn.commit()
+
+        return jsonify({"mensaje": "Categoría creada correctamente."}), 201
+
+    except Exception as e:
+        print("Error al crear categoría:", e)
+        return jsonify({"error": "Error interno al crear la categoría."}), 500
+
+#-------------------------------------------- baja categorias ----------------------------------------------
+@app.route("/categorias/<int:id_usuario>/<int:id_categoria>", methods=["DELETE"])
+def eliminar_categoria(id_usuario, id_categoria):
+    try:
+        # Aquí podés validar id_usuario (p.ej. verificar rol admin)
+        cursor.execute("SELECT rol FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+        usuario = cursor.fetchone()
+        if not usuario:
+            return jsonify({"error": "Usuario no encontrado."}), 404
+        if usuario[0].lower() != "administrador":
+            return jsonify({"error": "Acceso denegado."}), 403
+
+        # Verificar si la categoría existe
+        cursor.execute("""
+            SELECT nombre_categoria FROM categorias_problematicas
+            WHERE id_categoria_problematica = %s
+        """, (id_categoria,))
+        categoria = cursor.fetchone()
+
+        if not categoria:
+            return jsonify({"error": "Categoría no encontrada."}), 404
+
+        try:
+            # Intentar eliminar la categoría
+            cursor.execute("""
+                DELETE FROM categorias_problematicas 
+                WHERE id_categoria_problematica = %s
+            """, (id_categoria,))
+            conn.commit()
+            return jsonify({"mensaje": "Categoría eliminada correctamente."}), 200
+
+        except mysql.connector.IntegrityError as e:
+            if e.errno == 1451:
+                # Categoría en uso, reasignar a "Categoría eliminada"
+                cursor.execute("""
+                    SELECT id_categoria_problematica FROM categorias_problematicas
+                    WHERE LOWER(nombre_categoria) = LOWER(%s)
+                """, ("Categoría eliminada",))
+                existente = cursor.fetchone()
+
+                if existente:
+                    id_eliminada = existente[0]
+                else:
+                    cursor.execute("""
+                        INSERT INTO categorias_problematicas (nombre_categoria, estado_categoria)
+                        VALUES (%s, %s)
+                    """, ("Categoría eliminada", False))
+                    conn.commit()
+                    id_eliminada = cursor.lastrowid
+
+                # Reasignar reportes
+                cursor.execute("""
+                    UPDATE reporte
+                    SET fk_id_categoria = %s
+                    WHERE fk_id_categoria = %s
+                """, (id_eliminada, id_categoria))
+                conn.commit()
+
+                # Eliminar categoría original
+                cursor.execute("""
+                    DELETE FROM categorias_problematicas 
+                    WHERE id_categoria_problematica = %s
+                """, (id_categoria,))
+                conn.commit()
+
+                return jsonify({
+                    "mensaje": "Categoría estaba en uso, pero fue reasignada y eliminada correctamente."
+                }), 200
+            else:
+                print("Error:", e)
+                return jsonify({"error": "Error al eliminar la categoría."}), 500
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": "Error interno."}), 500
 
 #-------------------------------------------- Main ----------------------------------------------
 if __name__ == '__main__':
