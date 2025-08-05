@@ -1,16 +1,3 @@
-# Ciudad_Reporta
-
-### Configuracion de la BDD
-Cambiar los valores necesarios para poder conectarse con la BDD (al inicio del archivo "Ciudad_Reporta.py")
-```
-conn = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='1234'
-)
-```
-
-
 # scripts-python
 
 ### Para crear un entorno virtual
